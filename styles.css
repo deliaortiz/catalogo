@@ -55,7 +55,7 @@ section {
     display: none;
 }
 
-#movie li,
+#movies li,
 #favorites-list li {
     margin-bottom: 10px;
 }

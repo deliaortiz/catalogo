@@ -1,20 +1,21 @@
-const apiKey = '';
-const apiUrl = '';
+const apiKey = 'd48b550f5add6c862a9ba5b8d330b873';
+const apiUrl = 'https://api.themoviedb.org/3';
 const movieList = document.getElementById('movies');
 const movieDetails = document.getElementById('movie-details');
-const detailsContainer = document.getElementById('search-button');
+const detailsContainer = document.getElementById('details');
+const searchButton = document.getElementById('search-button');
 const searchInput = document.getElementById('search-input');
 const favoritesList = document.getElementById('favorites-list');
 const addToFavoritesButton = document.getElementById('add-to-favorites');
 let selectedMovieId = null;
-let selectedMovies = JSON.parse(localStorage.getItemL('favorites')) || [];
+let favoriteMovies = JSON.parse(localStorage.getItem('favorites')) || [];
 
 //para obtener peliculas populares//
 async function fetchPopularMovies() {
     try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(`${apiUrl}/movie/popular?api_key=${apiKey}`);
         const movies = await response.json();
-        displayMovies(movies);
+        displayMovies(movies.results);
     } catch (error) {
         console.error('Error fetching popular movies', error);
     }
@@ -37,6 +38,17 @@ function displayMovies(movies) {
 //muestra detalles de peliculas
 async function showMovieDetails(movieId) {
     try {
+        const response = await fetch(`${apiUrl}/movie/${movieId}?api_key=${apiKey}`);
+        const details = await response.json();
+    //muestra los detalles
+        detailsContainer.innerHTML = `
+        <h2>${details.title}</h2>
+       
+        <img src="https://image.tmdb.org/t/p/w500${details.poster_path}"alt="${details.title}">
+        <p>${details.overview}</p>
+        <p>Fecha de lanzamiento: ${details.release_date}</p>`;
+        movieDetails.classList.remove('hidden');
+        selectedMovieId = details.id;//id de la pelicula selecionada
         
     } catch (error) {
         console.error('Error fetching movie details',error);
@@ -45,10 +57,12 @@ async function showMovieDetails(movieId) {
 
 //busca peliculas
 searchButton.addEventListener('click', async() => {
-    const query = searchInput.value;
+    const query = searchInput.value.trim();//trim para eliminar espacios inecesarios
     if(query) {
         try {
-            
+            const response = await fetch(`${apiUrl}/search/movie?api_key=${apiKey}&query=${query}`);
+            const results = await response.json();
+            displayMovies(results.results);//muestra resultados de busqueda
         } catch (error) {
             console.error('Error searching movies:', error);
         }
@@ -60,10 +74,10 @@ addToFavoritesButton.addEventListener('click', () => {
     if(selectedMovieId) {
         const favoriteMovie = {
             id: selectedMovieId,
-            title: document.querySelector('#details h3').textContent
+            title: document.querySelector('#details h2').textContent
         };
         if(!favoriteMovies.some(movie => movie.id === selectedMovieId)) {
-            favoriteMovie.push(favoriteMovie);
+            favoriteMovies.push(favoriteMovie);
             localStorage.setItem('favorites', JSON.stringify(favoriteMovies));
             //guarda en localStorage
             displayFavorites();//muestra la lista actualiza de favoritos
